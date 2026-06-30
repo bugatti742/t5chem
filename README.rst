@@ -1,46 +1,130 @@
 T5Chem
-=======
+======
 
-A Unified Deep Learning Model for Multi-task Reaction Predictions
+.. image:: https://img.shields.io/pypi/v/t5chem.svg
+    :target: https://pypi.python.org/pypi/t5chem
+    :alt: Latest PyPI version
 
-Features
---------
+A Unified Deep Learning Model for Multi-task Reaction Predictions.
 
-- **Retrosynthesis Prediction**: Predict reactants from a product molecule
-- **Product Prediction**: Predict products from reactants and reagents
-- **Reagents Prediction**: Predict required reagents for a reaction
-- **Classification**: Predict reaction classes
-- **Regression**: Predict reaction yields
-- **MCP Support**: Model Context Protocol integration for AI assistants
+It is built on `huggingface transformers`_ -- T5 model with some modifications.
+
+.. image:: cover.png
+
+.. _huggingface transformers: https://github.com/huggingface/transformers
+
+Docker
+------
+We have a docker image available `here <https://hub.docker.com/repository/docker/hellojocelynlu/t5chem>`__, feel free to try it out!
+
 
 Installation
 ------------
 
+T5Chem can be either installed via pip or from source. We recommend to install t5chem from source.
+
+1. To install from source
+
+ .. code:: bash
+
+   $ git clone https://github.com/HelloJocelynLu/t5chem.git
+   $ cd t5chem/
+   $ pip install .
+
+It should automatically handle dependencies for you.
+
+2. To install via pip
+
+ .. code:: bash
+
+   $ pip install t5chem
+
+Usage
+-----
+Call from command line:
+
 .. code:: bash
 
-    pip install -e .
+   $ t5chem -h # show the general help information
+   $ t5chem train -h # show help information for model training
+   $ t5chem predict -h # show help information for model prediction
 
-Quick Start
------------
+We have some sample data (a small subset from datasets used in paper) available in `data/` folder, to have a quick start:
 
 .. code:: bash
 
-    t5chem predict --data_dir data/sample/reactants/ --model_dir model/
+   $ tar -xjvf data/sample_data.tar.bz2
+   $ t5chem train --data_dir data/sample/product/ --output_dir model/ --task_type product --num_epoch 30        # Train a model
+   $ t5chem predict --data_dir data/sample/product/ --model_dir model/      # test a trained model
 
-For more details, see the documentation.
+However, finetune based on a pre-trained model is strongly recommended. (You will get ~70% top-1 accuracy if training from a pretrained model by using `--pretrain`. But only 0.1% top-1 accuracy by training from scratch). You can download some pre-trained models and more datasets `here <https://zenodo.org/records/14280768>`__.
 
-Requirements
-------------
+Download and extract the pretrained model weights:
 
-- Python >= 3.10
-- PyTorch >= 2.2.0
-- transformers >= 4.38.0
-- rdkit >= 2022.9.4
+.. code:: bash
 
-License
+   $ wget https://zenodo.org/records/14280768/files/simple_pretrain.tar.bz2
+   $ tar -xjvf simple_pretrain.tar.bz2
+
+Train using a pretrained model and test it:
+
+.. code:: bash
+
+   $ t5chem train --data_dir data/sample/product/ --output_dir model/ --task_type product --num_epoch 30 --pretrain models/pretrain/simple/
+   $ t5chem predict --data_dir data/sample/product/ --model_dir model/
+
+A more detailed example training from pretrained weights and explanations for commonly used arguments can be find `here <https://yzhang.hpc.nyu.edu/T5Chem/tutorial.html>`__.
+
+Call as an API (Test a trained model):
+
+.. code:: python
+
+   from transformers import T5ForConditionalGeneration
+   from t5chem import T5ForProperty, SimpleTokenizer
+   pretrain_path = "path/to/your/pretrained/model/"
+   model = T5ForConditionalGeneration.from_pretrained(pretrain_path)    # for seq2seq tasks
+   tokenizer = SimpleTokenizer(vocab_file=os.path.join(pretrain_path, 'vocab.txt'))
+   inputs = tokenizer.encode("Product:COC(=O)c1cc(COc2ccc(-c3ccccc3OC)cc2)c(C)o1.C1CCOC1>>", return_tensors='pt')
+   output = model.generate(input_ids=inputs, max_length=300, early_stopping=True)
+   tokenizer.decode(output[0], skip_special_tokens=True) # "COc1ccccc1-c1ccc(OCc2cc(C(=O)O)oc2C)cc1"
+
+   model = T5ForProperty.from_pretrained(pretrain_path)  # for non-seq2seq task
+   inputs = tokenizer.encode("Classification:COC(=O)c1cccc(C(=O)OC)c1>CN(C)N.Cl.O>COC(=O)c1cccc(C(=O)O)c1", return_tensors='pt')
+   outputs = model(inputs)
+   print(outputs.logits.argmax())   # Class 3
+
+We have Google Colab examples available! Feel free to try it out:
+
+- Call T5Chem via CLI (command line) `Colab <https://colab.research.google.com/drive/13tJlJ5loLtws6u91shbSjuPoiA1fCSae?usp=sharing>`__
+
+- Use a pretrained model in python script `Colab <https://colab.research.google.com/drive/1xwz7c7q1SwwD5jEQKamo9TNCN1PKH8um?usp=sharing>`__
+
+- Design your own project: predict molecular weights `Colab <https://colab.research.google.com/drive/1eu22gjGJDwXy59TBL8pfDmBF5_DQXBGn?usp=sharing>`__
+
+
+Licence
+-------
+MIT Licence.
+
+Authors
 -------
 
-MIT License
+`t5chem` was written by `Jocelyn Lu <jl8570@nyu.edu>`_.
+
+Reference
+----------
+
+Jieyu Lu and Yingkai Zhang., Unified Deep Learning Model for Multitask Reaction Predictions with Explanation. *J. Chem. Inf. Model.*, **62**. 1376-1387 (2022) https://pubs.acs.org/doi/abs/10.1021/acs.jcim.1c01467
+
+.. code:: bash
+
+      @article{lu2022unified,
+      title={Unified Deep Learning Model for Multitask Reaction Predictions with Explanation},
+      author={Lu, Jieyu and Zhang, Yingkai},
+      journal={Journal of Chemical Information and Modeling},
+      year={2022},
+      publisher={ACS Publications}
+      }
 
 Other projects in Zhang's Lab:
 https://www.nyu.edu/projects/yzhang/IMA/
@@ -48,35 +132,80 @@ https://www.nyu.edu/projects/yzhang/IMA/
 MCP Server Support
 ------------------
 
-T5Chem now supports the Model Context Protocol (MCP) for AI assistants.
+T5Chem now supports the Model Context Protocol (MCP) for AI assistants like Claude, Cursor, VS Code, and Trae IDE.
+
+Quick Start with MCP:
+^^^^^^^^^^^^^^^^^^^^^
 
 .. code:: bash
 
    # Install with MCP support
    pip install -e ".[mcp]"
    
-   # Start MCP server
+   # Download pre-trained model
+   wget https://yzhang.hpc.nyu.edu/T5Chem/models/USPTO_MT_model.tar.bz2
+   tar -xjvf USPTO_MT_model.tar.bz2 -C model/
+   
+   # Start MCP server (auto-detected by IDE via .mcp.json)
    t5chem-mcp --model_dir model/
+
+IDE Integration:
+^^^^^^^^^^^^^^^^
+
+The project includes a ``.mcp.json`` configuration file that enables automatic MCP server detection:
+
+.. code:: json
+
+   {
+     "mcpServers": {
+       "t5chem": {
+         "command": "python",
+         "args": ["-m", "t5chem.mcp_server", "--model_dir", "./model"],
+         "cwd": "${workspaceFolder}",
+         "env": {
+           "T5CHEM_MODEL_DIR": "./model",
+           "PYTHONPATH": "${workspaceFolder}"
+         },
+         "type": "stdio"
+       }
+     }
+   }
+
+Supported MCP Tools:
+^^^^^^^^^^^^^^^^^^^^
+
+- ``predict_retrosynthesis``: Predict retrosynthesis routes
+- ``predict_product``: Predict products from reactants
+- ``predict_reagents``: Predict reagents for reactions
+- ``validate_molecule``: Validate SMILES strings
+- ``get_molecule_properties``: Calculate molecular properties
+
+For more details, see `README_MCP.md <README_MCP.md>`__.
 
 Download Model and Data
 -----------------------
 
-Large files are NOT included in the GitHub repository.
-Download them separately:
+Large files (model weights and datasets) are **not included** in the GitHub repository. 
+You need to download them separately:
 
-- Pre-trained models: Download from Zenodo or T5Chem website
-- Extract to model/ directory
+- **Pre-trained models**: Download from `Zenodo <https://zenodo.org/records/14280768>`__
+- **Multi-task model**: Download from `T5Chem website <https://yzhang.hpc.nyu.edu/T5Chem/models/USPTO_MT_model.tar.bz2>`__
+- **Sample data**: Extract from ``data/sample_data.tar.bz2``
+
+After downloading, extract the model to the ``model/`` directory.
 
 Known Issues
 ------------
 
-1. Starlette Version Conflict: The MCP SDK requires starlette>=1.3.1
-2. Model Files Not in Git: Model weights excluded from version control
-3. GPU Acceleration: Recommended for faster predictions
+1. **Starlette Version Conflict**: The MCP SDK requires ``starlette>=1.3.1``, which may conflict with other packages like ``fastapi`` or ``gradio`` that require ``starlette<1.0``. If you encounter this issue, consider using a separate virtual environment for T5Chem with MCP support.
+
+2. **Model Files Not in Git**: Model weights (``*.safetensors``) and large datasets (``*.tar.bz2``) are excluded from version control. They must be downloaded separately as described above.
+
+3. **GPU Acceleration**: For faster predictions, ensure you have CUDA installed and available. The model will automatically use GPU if available.
 
 Troubleshooting
 ---------------
 
-- Verify SMILES format correctness
-- Check model_dir points to valid directory
-- Use GPU for better performance
+- If you get ``Invalid SMILES`` errors, ensure your input SMILES strings are correctly formatted.
+- If model loading fails, verify the ``model_dir`` points to a valid directory with ``config.json`` and ``model.safetensors`` files.
+- For performance issues, try reducing ``num_beams`` parameter or using GPU acceleration.
