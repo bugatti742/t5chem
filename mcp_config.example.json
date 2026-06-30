@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "t5chem": {
+      "command": "python",
+      "args": ["-m", "t5chem.mcp_server", "--model_dir", "./model"],
+      "cwd": "/path/to/t5chem",
+      "env": {
+        "T5CHEM_MODEL_DIR": "./model",
+        "PYTHONPATH": "/path/to/t5chem"
+      },
+      "type": "stdio"
+    }
+  }
+}
