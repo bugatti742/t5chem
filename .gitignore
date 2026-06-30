@@ -1,0 +1,58 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.eggs/
+*.egg-info/
+
+# PyTorch
+*.pt
+*.pth
+*.bin
+*.safetensors
+
+# Data
+*.tar.bz2
+*.tar.gz
+*.zip
+*.csv
+*.txt
+
+# WandB
+wandb/
+
+# Logs
+*.log
+log/
+
+# Output
+output/
+predictions/
+predictions_res/
+
+# Temporary
+tmp/
+.DS_Store
+
+# Model files
+model/*.safetensors
+model/checkpoint*/
+
+# Environment
+.env
+.venv/
+venv/
+
+# VS Code
+.vscode/
+
+# Jupyter
+*.ipynb
+
+# Training artifacts
+training_args.bin
