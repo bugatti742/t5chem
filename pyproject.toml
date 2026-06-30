@@ -1,0 +1,53 @@
+[build-system]  
+requires = ["setuptools>=45", "wheel", "setuptools_scm[toml]>=6.2"]  
+build-backend = "setuptools.build_meta"  
+
+[project]  
+name = "t5chem"  
+dynamic = ["version"]
+description = "A Unified Deep Learning Model for Multi-task Reaction Predictions"  
+readme = "README.rst"  
+authors = [  
+    {name = "Jocelyn Lu", email = "jl8570@nyu.edu"},  
+]  
+license = {text = "MIT"}  
+classifiers = [  
+    "Development Status :: 3 - Alpha",  
+    "License :: OSI Approved :: MIT License",  
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]  
+requires-python = ">=3.10"  
+dependencies = [  
+    "transformers>=4.38.0",  
+    "accelerate>=0.26.0",
+    "tokenizers>=0.19.1",
+    "torch>=2.2.0",
+    "scikit-learn>=1.5.0",  
+    "scipy>=1.6.0",  
+    "wandb>=0.18.0",  
+    "pandas>=1.2.4",  
+    "rdkit>=2022.9.4",  
+    "mcp>=1.0.0",
+]  
+
+[tool.setuptools.dynamic]  
+version = {attr = "t5chem.__version__.__version__"} 
+
+[project.urls]  
+Homepage = "https://github.com/bugatti742/t5chem"  
+
+[project.scripts]  
+t5chem = "t5chem.__main__:main"
+t5chem-mcp = "t5chem.mcp_server:main"
+
+[project.optional-dependencies]
+mcp = ["mcp>=1.0.0"]  
+
+[tool.setuptools]  
+packages = ["t5chem"]  
+package-data = {"t5chem" = ["vocab/*"]}  
+
+[tool.setuptools.exclude-package-data]  
+"*" = ["tests/*"]
